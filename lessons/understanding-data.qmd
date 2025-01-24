@@ -1,0 +1,148 @@
+---
+title: "Understanding data"
+format: html
+include-in-header: "components/add-answer-button.html"
+editor: visual
+---
+
+::: summary
+## Questions
+
+-   How does R store and represent data?
+
+## Objectives
+
+-   Understand data types and missing values
+-   Learn about data structures vectors and data.frame
+:::
+
+We started the previous lessons with `read_csv()`. To better understand the data returned by `read_csv()`, we will learn how R represents and stores data.
+
+```{r, loading_packages}
+#| message: false
+
+library(readr) # read and write tabular data
+library(dplyr) # manipulate data
+```
+
+```{r, assign_read_csv_to_object}
+#| message: false
+#| warning: false
+
+inat_data <- read_csv('data/cleaned/cnc-los-angeles-observations.csv')
+
+```
+
+Let's look at the data information returned by `glimpse()`.
+
+```{r, call_glimpse}
+glimpse(inat_data)
+```
+
+## Data Types
+
+`glimpse()` shows `<dbl> <date> <chr> <lgl>`. Those are data types.
+
+In computer programming, **data type** is a way to group data values. Every value has a data type. A value's data type will determine what the programming language can do with the value. For instance, in R we can add numbers but we can't add character strings.
+
+There are 4 main types in R: **numeric**, **integer**, **logical**, and **character**.
+
+-   **numeric** are numbers that contain a decimal (e.g. 1.2, 10.5). By default, R also treats whole numbers as decimals (e.g. 1, 10).
+
+-   **integer** are whole numbers that do not have a decimal point. (e.g. 1L, 10L). In R, the `L` suffix forces the number to be an integer, since by default R uses decimal numbers.
+
+-   **logical** have values of `TRUE` or `FALSE`.
+
+-   **character** are strings of characters (e.g. "abc", 'dog'). Characters are mainly letters and punctuation. Numbers combined with letters are treated as characters such as '1apple'. Strings must be surrounded by quotes, either single quotes or double quotes.
+
+## Data Structures
+
+A **data structure** is a way to organize and store a collection of values.
+
+### Vectors
+
+A **vector** is data structure in R that has series of values. All the value in the vector must be the same data type.
+
+To create a vector we use the `c()` combine function, and pass in the values as arguments.
+
+We can use `class()` function to find the type or class of any object.
+
+numeric vector
+
+```{r numeric_vector}
+numbers <- c(1, 2, 5)
+numbers
+
+class(numbers)
+```
+
+character vector
+
+```{r character_vector}
+characters <- c("apple", 'pear', "grape")
+characters
+
+class(characters)
+```
+
+logical vector
+
+```{r logical_vector}
+logicals <- c(TRUE, FALSE, TRUE)
+logicals
+
+class(logicals)
+```
+
+If you try to put values of different data types into a vector, all the values are converted to the same data type. In the following example, everything is converted to character type.
+
+```{r vector_conversion}
+mixed <- c(1, "apple", TRUE)
+mixed
+
+class(mixed)
+```
+
+### data.frame
+
+When we call `class()` with `inat_data`, it returns "tbl" and "data.frame".
+
+```{r}
+class(inat_data)
+```
+
+**data.frame** is a data structure from R that is used to represent tabular data with rows and columns. **tbl** aka tibble is an updated version of data.frame from the **tibble** package. **readr** uses tibbles instead of data.frames.
+
+When `readr` loads a CSV, it tries to figure the data type for each column. Each column in a data.frame or tibble is a vector. Because each column is a vector, all the values in a column must be of the same data type.
+
+For `inat_data`, `id` is **numeric**, `captive_cultivated` is **logical**, `user_login` is **character**. Multiple columns have `NA` such as `license` and `sound_url`.
+
+`readr` has a special data type `date` that is used to represent dates. Column `observed_on` is **date**. Other columns are such as `time_observed_at` are treated as **character** because those strings have extra information that `readr` does not recognize as a **date**.
+
+## Missing data
+
+R represents missing data as `NA`, without quotes. `NA` stands for not applicable.
+
+`NA` is allowed in vectors of any data type.
+
+```{r c-vector-na}
+numbers <- c(1, 2, NA)
+numbers
+
+class(numbers)
+```
+
+When you pass number vectors with `NA` to a math function like `min()` , the function returns `NA`. `min()` returns the smallest number in a vector.
+
+```{r}
+min(numbers)
+```
+
+Many math functions have an argument `na.rm` to remove `NA` values for its calculations.
+
+```{r}
+min(numbers,  na.rm = TRUE)
+```
+
+## 
+

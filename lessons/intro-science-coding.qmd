@@ -1,0 +1,60 @@
+---
+title: "Science and Coding concepts"
+format: html
+editor: visual
+---
+
+## Biology Concepts
+
+### Urban Ecology
+
+More content needed...
+
+### Taxonomy
+
+Wikipedia description of [taxonomy](https://en.wikipedia.org/wiki/Taxonomy_(biology))
+
+> In biology, taxonomy (from Ancient Greek τάξις (taxis) 'arrangement' and -νομία (-nomia) 'method') is the scientific study of naming, defining (circumscribing) and classifying groups of biological organisms based on shared characteristics. Organisms are grouped into taxa (singular: taxon) and these groups are given a taxonomic rank; groups of a given rank can be aggregated to form a more inclusive group of higher rank, thus creating a taxonomic hierarchy. The principal ranks in modern use are domain, kingdom, phylum (division is sometimes used in botany in place of phylum), class, order, family, genus, and species.
+
+The current system of taxonomy uses Latin names for the scientific name. Each scientific name can have multiple common names in multiple languages.
+
+Here's iNaturalist taxonomy for Western Fence Lizard, the most common species in Los Angeles City Nature Challenge.
+
+**Rank**: Latin scientific name (English common name)
+
+-   **Kingdom**: Animalia (Animals)
+
+-   **Phylum**: Chordata (Chordates)
+
+-   **Class**: Reptilia (Reptiles)
+
+-   **Order**: Squamata (Snakes and Lizards)
+
+-   **Family**: Phrynosomatidae (Phrynosomatid Lizards)
+
+-   **Genus**: Sceloporus (Spiny Lizards)
+
+-   **Species**: Sceloporus occidentalis (Western Fence Lizard)
+
+In theory, every iNaturalist observation represents a species. In practice, an iNaturalist observation will be assigned to a particular taxa name and taxon rank based on the quality of the recorded data, the expertise of the observer, the suggestion algorithms of iNaturalist, and the expertise of people who help identify observations.
+
+## Coding Concepts
+
+The basis of programming is that we write down instructions for the computer to follow, and then we tell the computer to follow those instructions. We write these instructions in the form of code, which is a common language that is understood by the computer and humans (after some practice). We call these instructions commands, and we tell the computer to follow the instructions by running (also called executing) the commands.
+
+## Geospatial concepts
+
+Geospatial data is data that has a particular location. There are different software tools that can be used to display and analyze geospatial data.
+
+The two primary types of geospatial data are raster and vector data. Raster data is stored as a grid of values which are rendered on a map as pixels. Vector data structures represent specific features on the Earth’s surface, and assign attributes to those features.
+
+### **Coordinate Reference Systems**
+
+Earth is a 3D sphere. Maps are 2D representation of a 3D sphere. Map projections are ways to flatten a spherical Earth to a flat surface.
+
+The image belows shows maps of the United States in different projections. The differences in shape are a direct result of the calculations used to flatten the data onto a 2-dimensional map.
+
+![Source: opennews.org, from: https://media.opennews.org/cache/06/37/0637aa2541b31f526ad44f7cb2db7b6c.jpg](images/crs.jpg)
+
+In order for software to correctly display and manipulate geospatial data, the data must include coordinate reference system (CRS) information. The CRS tells the mapping software which map projection to use and where the data is located. To make sure things line up when working with multiple geospatial data sets, it’s important to use the same CRS during data processing and analysis.
+

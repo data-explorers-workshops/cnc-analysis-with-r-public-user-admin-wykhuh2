@@ -1,0 +1,329 @@
+---
+title: "Cleaning data"
+format: html
+editor: visual
+---
+
+A common step during data analysis is to clean up the raw data. We fix any obvious errors, edit column names, exclude rows we do not want, and save the cleaned up data set. We do the analysis on the cleaned data set.
+
+Load libraries
+
+```{r}
+#| message: false
+
+library(readr)
+library(dplyr)
+library(pdftools)
+library(stringr)
+```
+
+## iNaturalist
+
+### Cleaning up iNaturalist file
+
+Save the file paths as objects.
+
+```{r}
+observations_raw_path <- 'data/raw/observations-513664.csv'
+observations_cleaned_path <- 'data/cleaned/cnc-los-angeles-observations.csv'
+threatened_raw_path <- 'data/raw/observations-514065_threatened.csv'
+introduced_raw_path <- 'data/raw/observations-514069_introduced.csv'
+native_raw_path <- 'data/raw/observations-514076_native.csv'
+
+```
+
+The CSV we downloaded from iNaturalist had several problems.
+
+-   some observation did not have a species
+-   some observations did not have location information
+-   some observations were not in Los Angeles
+-   there were some fields that we did not need
+-   information about observations with threatened, native, and introduced species had to be downloaded separately
+
+In order to simplify things for the workshop attendees, we fixed the various issues and created a cleaned up CSV.
+
+These are the steps we took to produced the cleaned up file. The raw file is at '`{r} observations_raw_path`', the cleaned file is at '`{r} observations_cleaned_path`'
+
+```{r}
+#| message: false
+#| warning: false
+
+inat_raw <- read_csv(observations_raw_path)
+
+```
+
+Use `colSums(is.na())` to count the number of rows that have NA values for each column.
+
+```{r}
+colSums(is.na(inat_raw))
+```
+
+All rows have id, observed_on, and user_id.
+
+some rows don't have scientific_name, latitude or longitude.
+
+Use `filter` to select the observations we want.
+
+`!is.na` will select rows that have are not NA, meaning rows that have a value. We select observations that have latitude, longitude, and scientific_name. We also ignored observations outside of LA
+
+We save the cleaned up data in a new object `inat`.
+
+```{r}
+inat <- inat_raw %>% 
+  filter(!is.na(latitude) &
+           !is.na(longitude) &
+           !is.na(scientific_name)) %>%
+    filter(latitude < 40)  
+
+
+```
+
+The original data frame 'inat_raw' had 193K rows, the cleaned data frame 'inat' has 191K rows.
+
+We can double check our work.
+
+latitude, longitude, scientific_name have zero NA.
+
+```{r}
+colSums(is.na(inat))
+```
+
+We want to delete unneeded columns to keep the CSV under 100 MB for Github
+
+```{r}
+names(inat)
+```
+
+Setting a column to NULL will remove the column.
+
+```{r}
+inat$uuid <- NULL
+inat$observed_on_string <- NULL
+inat$time_zone <- NULL
+inat$num_identification_agreements <- NULL
+inat$num_identification_disagreements <- NULL
+inat$oauth_application_id <- NULL
+inat$place_guess <- NULL
+inat$private_place_guess <- NULL
+inat$private_longitude <- NULL
+inat$private_latitude <- NULL
+inat$positioning_method <- NULL
+inat$positioning_device <- NULL
+```
+
+use `filter` and `dim` to see how often the taxon names were used.
+
+```{r}
+inat %>% filter(!is.na(taxon_subphylum_name)) %>% dim
+```
+
+```{r}
+inat %>% filter(!is.na(taxon_superclass_name)) %>% dim
+inat %>% filter(!is.na(taxon_subclass_name)) %>% dim
+```
+
+```{r}
+inat %>% filter(!is.na(taxon_superorder_name)) %>% dim
+inat %>% filter(!is.na(taxon_suborder_name)) %>% dim
+```
+
+```{r}
+inat %>% filter(!is.na(taxon_superfamily_name)) %>% dim
+inat %>% filter(!is.na(taxon_subfamily_name)) %>% dim
+```
+
+```{r}
+inat %>% filter(!is.na(taxon_supertribe_name)) %>% dim
+inat %>% filter(!is.na(taxon_tribe_name)) %>% dim
+inat %>% filter(!is.na(taxon_subtribe_name)) %>% dim
+```
+
+```{r}
+inat %>% filter(!is.na(taxon_genushybrid_name)) %>% dim
+inat %>% filter(!is.na(taxon_hybrid_name)) %>% dim
+```
+
+```{r}
+inat %>% filter(!is.na(taxon_subspecies_name)) %>% dim
+inat %>% filter(!is.na(taxon_variety_name)) %>% dim
+inat %>% filter(!is.na(taxon_form_name)) %>% dim
+```
+
+```{r}
+inat$species_guess <- NULL
+
+inat$taxon_subphylum_name <- NULL
+
+inat$taxon_superclass_name <- NULL
+inat$taxon_subclass_name <- NULL
+
+inat$taxon_superorder_name <- NULL
+inat$taxon_suborder_name <- NULL
+
+inat$taxon_superfamily_name <- NULL
+inat$taxon_subfamily_name <- NULL
+
+inat$taxon_supertribe_name <- NULL
+inat$taxon_tribe_name <- NULL
+inat$taxon_subtribe_name <- NULL
+
+inat$taxon_genushybrid_name <- NULL
+inat$taxon_hybrid_name <- NULL
+
+inat$taxon_variety_name <- NULL
+inat$taxon_form_name <- NULL
+```
+
+```{r}
+names(inat)
+```
+
+We want to save the cleaned up data set so we can use it later. We can save data.frame to a CSV using the `write_csv()` function from the `readr` package. The first argument is the name of the data.frame, and the second is the path to the new file we want to create.
+
+```{r}
+#| eval: false
+write_csv(inat, file= observations_cleaned_path, na = "" )
+```
+
+### Adding more information
+
+In order to get information about observations with threatened, introduced, and native species, we had to download a separate CSV for each option. We want to merge all these files into one cleaned observations file.
+
+```{r}
+#| message: false
+
+inat_data <- read_csv(observations_cleaned_path)
+threatened_raw <- read_csv(threatened_raw_path)
+introduced_raw <- read_csv(introduced_raw_path)
+native_raw <- read_csv(native_raw_path)
+
+```
+
+Get threatened species.
+
+```{r}
+threatened_data <- threatened_raw %>% 
+  mutate(threatened = TRUE)
+
+threatened_data <- threatened_data[!duplicated(threatened_data), ]
+
+threatened_data
+```
+
+Get introduced species.
+
+```{r}
+introduced_data <- introduced_raw %>% 
+  mutate(establishment_means = 'introduced') 
+  
+introduced_data <- introduced_data[!duplicated(introduced_data), ]
+
+
+introduced_data
+```
+
+Get native species.
+
+```{r}
+native_data <- native_raw %>% 
+  mutate(establishment_means = 'native') 
+  
+native_data <- native_data[!duplicated(native_data), ]
+
+
+native_data
+```
+
+Get combine introduced and native data frames
+
+```{r}
+establishment_means <- rbind(introduced_data, native_data)
+
+establishment_means
+```
+
+remove rows where taxon_id is listed as both native and introduced
+
+```{r}
+non_duplicates <- establishment_means %>%
+  count(taxon_id) %>%
+  arrange(desc(n)) %>%
+  filter(n == 1)  
+  
+keep_ids <- non_duplicates$taxon_id
+
+length(keep_ids)
+```
+
+```{r}
+dedup_establishment_means <- establishment_means %>%
+  filter(taxon_id %in% keep_ids)
+```
+
+add threatened info to the main inat data frame.
+
+```{r}
+combined_data <- left_join(inat_data, threatened_data)
+```
+
+add native, introduced info to main inat data frame
+
+```{r}
+combined_data <- left_join(combined_data, dedup_establishment_means)
+
+```
+
+save file
+
+```{r}
+#| eval: false
+write_csv(combined_data, observations_cleaned_path, na = "")
+```
+
+## LASAN
+
+### Indicator species
+
+Convert pdf to CSV
+
+```{r}
+pdf <- pdf_text("./data/raw/LASAN/cnt061142_indicator_species.pdf") %>%
+  readr::read_lines()  
+```
+
+```{r}
+my_list = list()
+for (line in pdf[5:189]) {
+  if (line != '') {
+    matches <- str_match(line, 
+        "^([a-zA-Z]+)  +([a-zA-Z]+ [a-zA-Z.()]+ ([a-zA-Z.()]+ [a-zA-Z.()]+)?)  +([-'a-zA-Z ]+)  +"  
+    )
+    row <- c(matches[1,2], matches[1,3],  matches[1,5], 'species') %>% str_squish()
+    my_list[[length(my_list)+1]] <- row
+  }
+}
+
+stats_df <- plyr::ldply(my_list) 
+colnames(stats_df) <- c('group', 'scientific name', 'common name', 'taxon rank')
+
+stats_df <- stats_df %>% filter_all(any_vars(!is.na(.)))
+stats_df <- stats_df %>% filter(group != 'Group')
+
+stats_df[2,'common name'] <- paste(stats_df[2,'common name'], 'Salamander')
+stats_df[18,'common name'] <- paste(stats_df[18,'common name'], 'Jerusalem crickets')
+stats_df[22,'common name'] <- paste(stats_df[22,'common name'], 'hairstreak')
+stats_df[23,'common name'] <- paste(stats_df[23,'common name'], 'butterfly')
+stats_df[23,'taxon rank'] <- 'subspecies'
+stats_df[25,'scientific name'] <- 'Mutillidae'
+stats_df[25,'taxon rank'] <- 'family'
+stats_df[26,'scientific name'] <- 'Pogonomyrmex'
+stats_df[26,'taxon rank'] <- 'genus'
+
+```
+
+```{r}
+#| eval: FALSE
+write_csv(stats_df, './data/cleaned/LA_city_indicator_species.csv')
+
+```
+
